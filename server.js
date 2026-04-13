@@ -42,8 +42,8 @@ async function checkMetroStatus() {
         const currentStatus = record.etat;
         // console.log(`Statut actuel du Métro B : ${currentStatus}`);
 
-        if (currentStatus !== lastStatus) { 
-            if (currentStatus !== "OK") {
+        if (currentStatus == lastStatus) { 
+            if (currentStatus == "OK") {
                 const alertMsg = `🚨 *ALERTE MÉTRO B RENNES*\n\nÉtat : *${currentStatus}*`; 
                 await sendNotification(alertMsg);
             } else if (currentStatus == "OK") {
@@ -59,4 +59,5 @@ async function checkMetroStatus() {
 // Vérification toutes les minutes
 setInterval(checkMetroStatus, 60000);
 
-console.log("Serveur de surveillance du Métro B démarré...");
+sendNotification("✅ *MÉTRO B : Serveur de surveillance démarré.*");
+// console.log("Serveur de surveillance du Métro B démarré...");
