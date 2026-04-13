@@ -1,0 +1,13 @@
+{
+  "name": "metro-rennes-bot",
+  "version": "1.0.0",
+  "description": "Bot de notification pour le métro B de Rennes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.15.0",
+    "dotenv": "^17.4.2"
+  }
+}
