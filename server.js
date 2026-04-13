@@ -20,7 +20,7 @@ async function sendNotification(message) {
             text: message,
             parse_mode: 'Markdown'
         });
-        console.log("Notification envoyée !");
+        // console.log("Notification envoyée !");
     } catch (error) {
         console.error("Erreur Telegram :", error.message);
     }
