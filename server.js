@@ -20,14 +20,12 @@ async function sendNotification(message) {
             text: message,
             parse_mode: 'Markdown'
         });
-        // console.log("Notification envoyée !");
     } catch (error) {
         console.error("Erreur Telegram :", error.message);
     }
 }
 
 async function checkMetroStatus() {
-    // console.log("Vérification du statut du Métro B...");
     try {
         const response = await axios.get(STAR_API_URL, {
             params: {
@@ -40,10 +38,9 @@ async function checkMetroStatus() {
         if (!record) return;
 
         const currentStatus = record.etat;
-        // console.log(`Statut actuel du Métro B : ${currentStatus}`);
 
-        if (currentStatus == lastStatus) { 
-            if (currentStatus == "OK") {
+        if (currentStatus !== lastStatus) { 
+            if (currentStatus !== "OK") {
                 const alertMsg = `🚨 *ALERTE MÉTRO B RENNES*\n\nÉtat : *${currentStatus}*`; 
                 await sendNotification(alertMsg);
             } else if (currentStatus == "OK") {
@@ -56,8 +53,19 @@ async function checkMetroStatus() {
     }
 }
 
+const sendHealthCheck = async () => {
+    try {
+        await sendNotification("🤖 Coucou ! Je suis toujours en ligne et je surveille le métro B pour toi.");
+    } catch (error) {
+        console.error("Erreur lors de la notif de santé :", error);
+    }
+};
+
 // Vérification toutes les minutes
 setInterval(checkMetroStatus, 60000);
+
+// 86 400 000 ms = 24 heures
+setInterval(sendHealthCheck, 86400000);
 
 sendNotification("✅ *MÉTRO B : Serveur de surveillance démarré.*");
 // console.log("Serveur de surveillance du Métro B démarré...");
