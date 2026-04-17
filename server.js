@@ -46,9 +46,10 @@ async function checkMetroStatus() {
             }
             lastStatus = currentStatus;
         }
-        if (currentStatus === "OK") {
-            await bot.sendMessage(CHAT_ID, "✅ *MÉTRO B : Toujours OK.*", { parse_mode: "Markdown" });
-        }
+        // Vérification pour débug
+        // if (currentStatus === "OK") {
+        //     await bot.sendMessage(CHAT_ID, "✅ *MÉTRO B : Toujours OK.*", { parse_mode: "Markdown" });
+        // }
     } catch (error) {
         console.error("Erreur lors de la vérification du statut :", error.message);
     }
