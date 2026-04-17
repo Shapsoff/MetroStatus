@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const TelegramBot = require('node-telegram-bot-api');
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const CHAT_ID = process.env.CHAT_ID;
@@ -10,22 +11,11 @@ if (!TELEGRAM_TOKEN || !CHAT_ID) {
     process.exit(1);
 }
 
+const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
+
 let lastStatus = "OK"; 
 
-async function sendNotification(message) {
-    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-    try {
-        await axios.post(url, {
-            chat_id: CHAT_ID,
-            text: message,
-            parse_mode: 'Markdown'
-        });
-    } catch (error) {
-        console.error("Erreur Telegram :", error.message);
-    }
-}
-
-async function checkMetroStatus() {
+async function fetchStatus() {
     try {
         const response = await axios.get(STAR_API_URL, {
             params: {
@@ -33,39 +23,61 @@ async function checkMetroStatus() {
                 limit: 1
             }
         });
-
         const record = response.data.results[0];
-        if (!record) return;
+        return record ? record.etat : "Indisponible";
+    } catch (error) {
+        console.error("Erreur API STAR :", error.message);
+        return "Erreur API";
+    }
+}
 
-        const currentStatus = record.etat;
+async function checkMetroStatus() {
+    try {
+        const currentStatus = await fetchStatus();
+
+        if (currentStatus === "Erreur API" || currentStatus === "Indisponible") return;
 
         if (currentStatus !== lastStatus) { 
             if (currentStatus !== "OK") {
                 const alertMsg = `🚨 *ALERTE MÉTRO B RENNES*\n\nÉtat : *${currentStatus}*`; 
-                await sendNotification(alertMsg);
+                await bot.sendMessage(CHAT_ID, alertMsg, { parse_mode: "Markdown" });
             } else if (currentStatus == "OK") {
-                await sendNotification("✅ *MÉTRO B : Retour à la normale.* Le trafic reprend son cours.");
+                await bot.sendMessage(CHAT_ID, "✅ *MÉTRO B : Le service est rétabli.*", { parse_mode: "Markdown" });
             }
             lastStatus = currentStatus;
         }
+        if (currentStatus === "OK") {
+            await bot.sendMessage(CHAT_ID, "✅ *MÉTRO B : Toujours OK.*", { parse_mode: "Markdown" });
+        }
     } catch (error) {
-        console.error("Erreur API STAR :", error.message);
+        console.error("Erreur lors de la vérification du statut :", error.message);
+    }
+    
+}
+
+bot.on('message', async (msg) => {
+    const text = msg.text ? msg.text.toLowerCase() : "";
+    if (text === "?" || text === "etat") {
+        const currentStatus = await fetchStatus();
+        await bot.sendMessage(msg.chat.id, `🤖 *Je suis toujours up.*\n\nÉtat actuel du Métro B : *${currentStatus}*`, { parse_mode: 'Markdown' });
+    }
+});
+
+async function main() {    
+    try {
+        await bot.sendMessage(CHAT_ID, "✅ *MÉTRO B : Serveur démarré.*", { parse_mode: "Markdown" });
+
+        setInterval(checkMetroStatus, 60000);
+        
+        setInterval(async () => {
+            try {
+                await bot.sendMessage(CHAT_ID, "⏰ *Rappel quotidien...*", { parse_mode: "Markdown"});
+            } catch (e) { console.error("Erreur rappel:", e); }
+        }, 86400000);
+
+    } catch (error) {
+        console.error("Le bot n'a pas pu démarrer :", error.message);
     }
 }
 
-const sendHealthCheck = async () => {
-    try {
-        await sendNotification("🤖 Coucou ! Je suis toujours en ligne et je surveille le métro B pour toi.");
-    } catch (error) {
-        console.error("Erreur lors de la notif de santé :", error);
-    }
-};
-
-// Vérification toutes les minutes
-setInterval(checkMetroStatus, 60000);
-
-// 86 400 000 ms = 24 heures
-setInterval(sendHealthCheck, 86400000);
-
-sendNotification("✅ *MÉTRO B : Serveur de surveillance démarré.*");
-// console.log("Serveur de surveillance du Métro B démarré...");
+main();
