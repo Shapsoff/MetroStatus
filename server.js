@@ -35,7 +35,15 @@ async function checkMetroStatus() {
     try {
         const currentStatus = await fetchStatus();
 
-        if (currentStatus === "Erreur API" || currentStatus === "Indisponible") return;
+        if ((currentStatus === "Erreur API" || currentStatus === "Indisponible") && (currentStatus !== lastStatus)) {
+            await bot.sendMessage(CHAT_ID, `📵 ${currentStatus}`, { parse_mode: "Markdown" });
+            lastStatus = currentStatus;
+        }
+
+        if ((lastStatus === "Erreur API" || lastStatus === "Indisponible") && (currentStatus !== lastStatus)) {
+            await bot.sendMessage(CHAT_ID, `✅ Fin des problème d'API.\n\nÉtat : ${currentStatus}`, { parse_mode: "Markdown" });
+            lastStatus = currentStatus;
+        }
 
         if (currentStatus !== lastStatus) { 
             if (currentStatus !== "OK") {
