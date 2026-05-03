@@ -40,7 +40,7 @@ async function checkMetroStatus() {
             lastStatus = currentStatus;
         }
 
-        if ((lastStatus === "Erreur API" || lastStatus === "Indisponible") && (currentStatus !== lastStatus)) {
+        if ((lastStatus && lastStatus.includes("Erreur API") || lastStatus === "Indisponible") && (currentStatus !== lastStatus)) {
             await bot.sendMessage(CHAT_ID, `✅ Fin des problème d'API.\n\nÉtat : ${currentStatus}`, { parse_mode: "Markdown" });
             lastStatus = currentStatus;
         }
