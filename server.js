@@ -27,7 +27,7 @@ async function fetchStatus() {
         return record ? record.etat : "Indisponible";
     } catch (error) {
         console.error("Erreur API STAR :", error.message);
-        return "Erreur API";
+        return `Erreur API (${error.message})`;
     }
 }
 
@@ -35,7 +35,7 @@ async function checkMetroStatus() {
     try {
         const currentStatus = await fetchStatus();
 
-        if ((currentStatus === "Erreur API" || currentStatus === "Indisponible") && (currentStatus !== lastStatus)) {
+        if ((currentStatus && currentStatus.includes("Erreur API") || currentStatus === "Indisponible") && (currentStatus !== lastStatus)) {
             await bot.sendMessage(CHAT_ID, `📵 ${currentStatus}`, { parse_mode: "Markdown" });
             lastStatus = currentStatus;
         }
